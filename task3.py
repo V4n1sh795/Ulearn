@@ -4,6 +4,7 @@ import re
 
 html = input()
 
+
 exchange = {
     '₽': 1.0,
     '$': 100.0,
@@ -11,7 +12,15 @@ exchange = {
     '₸': 0.210,
     'Br': 30.0,
 }
-
+def currency(text):
+    pattern = '|'.join(re.escape(symbol) for symbol in exchange.keys())
+    match = re.search(pattern, text)
+    return match.group() if match else None
+def to_rubles(amount, currency):
+    if currency not in exchange:
+        raise ValueError(f"Неизвестная валюта: {currency}")
+    
+    return amount * exchange[currency]
 result = {
     'vacancy': None,
     'salary': None,
@@ -26,14 +35,23 @@ soup = bs4.BeautifulSoup(open(html), "html.parser")
 
 
 vacancy_title = soup.find(class_='vacancy-title')
-salary = vacancy_title.find(attrs={"data-qa": 'vacancy-salary'}).text
-result['salary'] = re.findall(r'\d+', salary)
+salary = vacancy_title.find(attrs={"data-qa": 'vacancy-salary'})
+salary_tile = salary.find(class_='bloko-header-section-2 bloko-header-section-2_lite')
+aaaaaaaaaaaaaaaaa = re.findall(r'<!--\s*-->\s*([\d\s]+?)\s*<!--\s*-->', str(salary_tile))
+curr = currency(str(salary_tile))
+salary =[x.replace('\xa0', '') for x in aaaaaaaaaaaaaaaaa]
+if len(salary) == 1:
+    result['salary'] = str(to_rubles(float(''.join(salary)), curr))
+else:
+    result['salary'] = f"{to_rubles(float(salary[0]), curr)}->{to_rubles(float(salary[1]), curr)}"
 result['vacancy'] = vacancy_title.find('h1').text
 
 vacancy_description_list_item = soup.find(class_='vacancy-description-list-item').text
 exp = re.findall(r'(\d+)–(\d+)', vacancy_description_list_item) # [['1', '3']]
-result['experience'] = f'{exp[0][0]}-{exp[0][1]}'
-
+try:
+    result['experience'] = f'{exp[0][0]}-{exp[0][1]}'
+except Exception as e:
+    result['experience'] = None
 vacancy_company_name = soup.find(class_="vacancy-company-name").text
 result['company'] = vacancy_company_name
 
