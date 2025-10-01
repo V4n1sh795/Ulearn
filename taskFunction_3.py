@@ -32,7 +32,7 @@ def formatter(row):
     formatted_row['Название:'] = row['name']
     formatted_row['Описание:'] = cut_by_100(row['description'].strip())
     skills = row['key_skills'].split('\n')
-    formatted_row['Навыки:'] = cut_by_100(', '.join(skills) if skills else '')
+    formatted_row['Навыки:'] = cut_by_100(', '.join(skills))
     exp_id = row['experience_id']
     formatted_row['Опыт работы:'] = EXPERIENCE.get(exp_id, exp_id)
     premium = row['premium']
@@ -65,6 +65,8 @@ def format_number(num_str):
 def cut_by_100(str):
     if len(str) > 100:
         return str[:100] + '...'
+    else:
+        return str
 
 def print_vacancies(csv_file):
     table = PrettyTable()
@@ -76,17 +78,19 @@ def print_vacancies(csv_file):
     
     with open(csv_file, encoding='utf-8') as file:
         reader = csv.DictReader(file)
-        start = True
+
         for i, row in enumerate(reader, start=1):
-            start = False
             formatted = formatter(row)
             desc = [i]
             for _ , r in formatted.items():
                 desc.append(r)
             table.add_row(desc)
-            print(table)
-        if start:
+        try:
+            len(desc) == 0      
+        except Exception as e:
             print("Нет данных")
+        else:
+            print(table)
 filename = input()
 
 if filename == '':
@@ -98,4 +102,6 @@ else:
 # from test-+---+----------------------+----------------------+----------------------+--------------------+------------------+----------------------+----------------------+----------------------+--------------------------+  
 # correct - +---+----------------------+----------------------+----------------------+--------------------+------------------+----------------------+----------------------+------------------+--------------------------+
 #     +----------------------+----------------------+----------------------+----------------------
+# | 2 | Оператор станков с   | Обязанности:         | None                 | От 1 года до 3 лет | Нет              | Опытное              | 30 000 - 50 000      | Нижний Новгород  | 17:09:02 31/05/2022      |
+# | 2 | Оператор станков с   | Обязанности:         | Работа в команде,    | От 1 года до 3 лет | Нет              | Опытное              | 30 000 - 50 000      | Нижний Новгород  | 17:09:02 31/05/2022      |
 print_vacancies(filename)
