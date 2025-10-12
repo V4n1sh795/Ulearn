@@ -1,6 +1,8 @@
 import csv
 from prettytable import PrettyTable, ALL
 
+full_key_list = ["Название", "Описание", "Навыки", "Опыт работы", "Премиум-вакансия", "Компания", "Оклад", "Название региона", "Дата публикации вакансии"]
+
 def fix_lenght(key_list):
     res = []
     for elem in key_list:
@@ -8,9 +10,11 @@ def fix_lenght(key_list):
     return res
 
 def cut_by_100(str):
+    global flag_test_5
+    global flag_test_7
     if len(str) > 100:
-        return str[:100] + '...'
-    else:
+        return (str[:100] + '...')
+    else:    
         return str
 
 def create_row_generator(fn):
@@ -20,8 +24,9 @@ def create_row_generator(fn):
             yield [i, row]
 
 def print_table(gen, start_row, last_row, key_list):
+    global full_key_list
     table = PrettyTable()
-    table.field_names = ['№'] + key_list
+    table.field_names = ['№'] + full_key_list
     table.align = "l"
     table.hrules = ALL
     for field in table.field_names:
@@ -29,11 +34,11 @@ def print_table(gen, start_row, last_row, key_list):
     try:
         while True:
             i, row = next(gen)        
-            add_row = [i] + [cut_by_100(value) for key, value in row.items() if key in key_list]
+            add_row = [i] + [cut_by_100(value) for key, value in row.items()]
             table.add_row(add_row)
     except StopIteration:
         pass
-    res = table.get_string(start=start_row-1, end=last_row)
+    res = table.get_string(start=start_row-1, end=last_row, fields=['№'] + key_list)
     print(res)
             
 
