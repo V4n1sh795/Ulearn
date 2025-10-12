@@ -39,4 +39,3 @@ def print_vacancies(rows, titels):
             continue
 titles, rows = csv_reader(filename)
 print_vacancies(rows, russian_titles)
-
