@@ -4,15 +4,13 @@ from prettytable import PrettyTable, ALL
 
 full_key_list = ["Название", "Описание", "Навыки", "Опыт работы", "Премиум-вакансия", "Компания", "Оклад", "Название региона", "Дата публикации вакансии"]
 
-def fix_lenght(key_list):
-    res = []
-    for elem in key_list:
-        res.append(elem.ljust(20))
-    return res
+# def fix_lenght(key_list):
+#     res = []
+#     for elem in key_list:
+#         res.append(elem.ljust(20))
+#     return res
 
 def cut_by_100(str):
-    global flag_test_5
-    global flag_test_7
     if len(str) > 100:
         return (str[:100] + '...')
     else:    

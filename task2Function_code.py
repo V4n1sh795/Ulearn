@@ -18,18 +18,14 @@ def cut_by_100(str):
         return str
 
 def procces_row(row): # dict like {name: param,  ...}
-    print("process_row")
     add_row = [cut_by_100(value) for key, value in row.items()]
     
     def acces_filter():
         global filt # <- [Навыки, CSS]
-        print(filt)
         def if_salary(add_row):
             if filt[0] == 'Оклад':
-                print('oklad started')
                 str = row['Оклад']
                 salary = [int(x.replace(' ', '')) for x in ''.join(re.findall(r'[\d\s]+-\s*[\d\s]+', str)).split('-')]
-                print(salary)
                 if salary[0] <= int(filt[1]) <= salary[1]:
                     return add_row
                 else:
@@ -46,10 +42,8 @@ def procces_row(row): # dict like {name: param,  ...}
             else:
                 return add_row # if_salary
         if filt == ['']:
-            print("filt empty")
             return add_row # acces_filter
-        if filt[1] in row[filt[0]]:
-            print("filt checking if_salary")
+        if (filt[1] in row[filt[0]])  or (filt[0] in ['Оклад', 'Идентификатор валюты оклада']):
             return if_salary(add_row) # acces_filter
         
         else:
@@ -111,7 +105,6 @@ else:
 
 gen = create_row_generator(fn)
 filt = [x.strip() for x in input().split(':')]
-print(filt)
 accepted_list = input().split()
 if accepted_list == []:
     first_row = 1
