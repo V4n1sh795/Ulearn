@@ -2,7 +2,12 @@ import csv
 from prettytable import PrettyTable, ALL
 import re
 
-
+transforner = {
+    'Нет опыта': 0,
+    'От 1 года до 3 лет': 1,
+    'От 3 до 6 лет': 2,
+    'Более 6 лет': 3
+}
 full_key_list = ["Название", "Описание", "Навыки", "Опыт работы", "Премиум-вакансия", "Компания", "Оклад", "Название региона", "Дата публикации вакансии"] 
 
 def fix_lenght(key_list):
@@ -11,15 +16,17 @@ def fix_lenght(key_list):
         res.append(elem.ljust(20))
     return res
 
+
 def cut_by_100(str):
     if len(str) > 100:
         return str[:100] + '...'
     else:
         return str
 
+
+
 def procces_row(row): # dict like {name: param,  ...}
     add_row = [cut_by_100(value) for key, value in row.items()]
-    
     def acces_filter():
         global filt # <- [Навыки, CSS]
         def if_salary(add_row):
@@ -43,9 +50,10 @@ def procces_row(row): # dict like {name: param,  ...}
                 return add_row # if_salary
         if filt == ['']:
             return add_row # acces_filter
-        if (filt[1] in row[filt[0]])  or (filt[0] in ['Оклад', 'Идентификатор валюты оклада']):
-            return if_salary(add_row) # acces_filter
-        
+        elif filt[0] in ['Оклад', 'Идентификатор валюты оклада']:
+            return if_salary(add_row)
+        elif filt[1] in row[filt[0]]:
+            return add_row # acces_filter  
         else:
             return None
     return acces_filter()
@@ -97,14 +105,16 @@ def print_table(gen, start_row, last_row, key_list):
     print(res)
             
 
-fn = input()
+fn = input() # filename
 if fn:
     fn = fn
 else:
     fn = "test/vacancies_for_functional.csv"
 
 gen = create_row_generator(fn)
-filt = [x.strip() for x in input().split(':')]
+
+filt = [x.strip() for x in input().split(':')] # filter
+
 accepted_list = input().split()
 if accepted_list == []:
     first_row = 1
@@ -117,7 +127,7 @@ else:
     last_row = int(accepted_list[1])
 key_list = input().split(', ')
 
-if key_list != ['']:
+if key_list != ['']: #key_skills
     key_list = key_list
 else:
     key_list = ["Название", "Описание", "Навыки", "Опыт работы", "Премиум-вакансия", "Компания", "Оклад", "Название региона", "Дата публикации вакансии"] 

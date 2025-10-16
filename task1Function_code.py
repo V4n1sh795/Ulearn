@@ -33,7 +33,7 @@ def print_table(gen, start_row, last_row, key_list):
     try:
         while True:
             i, row = next(gen)        
-            add_row = [i] + [cut_by_100(value) for key, value in row.items()]
+            add_row = [i] + [cut_by_100(value) for _, value in row.items()]
             table.add_row(add_row)
     except StopIteration:
         pass
