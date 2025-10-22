@@ -6,24 +6,31 @@ import re
 
 class Vacancy:
     def __init__(self, row):
-        self.name = row[0]
-        self.description = row[1]
-        self.key_skills = row[2]
-        self.experience_id = row[3]
-        self.premium = row[4]
-        self.employer_name = row[5]
-        self.salary = Salary(row[6])
-        self.area_name = row[7]
-        self.published_at = row[0]
+        self.name = row.get('Название')
+        self.description = row.get('Описание')
+        self.key_skills = row.get('Навыки')
+        self.experience_id = row.get('Опыт работы')
+        self.premium = row.get('Премиум-вакансия')
+        self.employer_name = row.get('Компания')
+        sal = row.get('Оклад')
+        self.salary = Salary(sal)
+        self.area_name = row.get('Название региона')
+        self.published_at = row.get('Дата публикации вакансии')
 
 
 
 class Salary:   
     def __init__(self, str):
+        # print(str)
         salary = [x.replace(' ', '') for x in ''.join(re.findall(r'[\d\s]+-\s*[\d\s]+', str)).split('-')]
         currency_match = re.findall(r'\(([^)]+)\)', str)
+        # print(salary)
+        # print(currency_match)
         self.salary_from = salary[0]
-        self.salary_to = salary[1]
+        try:
+            self.salary_to = salary[1]
+        except IndexError:
+            self.salary_to = salary[0]
         self.salary_gross = currency_match[0]
         self.salary_currency = currency_match[1]
         
@@ -43,9 +50,8 @@ def open_file():
     return fn
 
 def create_row_generator(fn):
-    with open(fn, 'r', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        next(reader)
+    with open(fn, 'r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
         for i, row in enumerate(reader, start=1):
             yield [i, row]
 def main():
@@ -54,7 +60,7 @@ def main():
     gen = create_row_generator(filename)
     try:
         while True:
-            _, row = next(gen)       
+            _, row = next(gen)
             v = Vacancy(row)
             main_list.append(v)
     except StopIteration:
