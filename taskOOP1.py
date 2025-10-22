@@ -6,33 +6,25 @@ import re
 
 class Vacancy:
     def __init__(self, row):
-        self.name = row.get('Название')
-        self.description = row.get('Описание')
-        self.key_skills = row.get('Навыки')
-        self.experience_id = row.get('Опыт работы')
-        self.premium = row.get('Премиум-вакансия')
-        self.employer_name = row.get('Компания')
-        sal = row.get('Оклад')
-        self.salary = Salary(sal)
-        self.area_name = row.get('Название региона')
-        self.published_at = row.get('Дата публикации вакансии')
+        # print(row)
+        self.name = row.get('name')
+        self.description = row.get('description')
+        self.key_skills = row.get('key_skills')
+        self.experience_id = row.get('experience_id')
+        self.premium = row.get('premium')
+        self.employer_name = row.get('employer_name')
+        self.salary = Salary([row.get('salary_from'), row.get('salary_to'), row.get('salary_gross'), row.get('salary_currency')])
+        self.area_name = row.get('area_name')
+        self.published_at = row.get('published_at')
 
 
 
 class Salary:   
-    def __init__(self, str):
-        # print(str)
-        salary = [x.replace(' ', '') for x in ''.join(re.findall(r'[\d\s]+-\s*[\d\s]+', str)).split('-')]
-        currency_match = re.findall(r'\(([^)]+)\)', str)
-        # print(salary)
-        # print(currency_match)
+    def __init__(self, salary):
         self.salary_from = salary[0]
-        try:
-            self.salary_to = salary[1]
-        except IndexError:
-            self.salary_to = salary[0]
-        self.salary_gross = currency_match[0]
-        self.salary_currency = currency_match[1]
+        self.salary_to = salary[1]
+        self.salary_gross = salary[2]
+        self.salary_currency = salary[3]
         
         # self.salary_gross = str.split(" ").remove(self.salary_currency, self.salary_from, self.salary_to)
         
@@ -46,7 +38,7 @@ def open_file():
     if fn:
         fn = fn
     else:
-        fn = "test/vacancies_for_functional.csv"
+        fn = "test/small_vac_50.csv"
     return fn
 
 def create_row_generator(fn):
