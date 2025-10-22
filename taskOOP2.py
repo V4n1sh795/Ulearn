@@ -2,6 +2,8 @@ from var_dump import var_dump
 from prettytable import PrettyTable, ALL
 import csv
 import re
+
+# ВНИМАНИЕ ЕСЛИ ВЫ НЕ У ДОЛИНЕРА РЕКОМЕНДУЮ ПЕРЕПИСАТЬ КОД, ПОТОМУ ЧТО В ЗАДАЧЕ НАПИСАНИО, ЧТО НАДО ИСПОЛЬЗОВАТЬ КЛАССЫ, В ДАННОМ СЛУЧАЕ НИКАК НЕ ИСПОЛЬЗУЮТСЯ Salary и Vacancy
 # main class - Vacancy and sec is Salary 
 # vacancy => vacancy::name, ..., vacancy::Salary::salary_from
 def cut_by_100(str):
@@ -43,11 +45,6 @@ class Utils:
                 res.append(cut_by_100(value))
             table.add_row(res)
         print(table)
-            
-                
-
-    
-
             
 def main():
     inp = input()
