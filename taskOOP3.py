@@ -1,20 +1,34 @@
-from var_dump import var_dump
-from prettytable import PrettyTable, ALL
 import csv
-import re
-# main class - Vacancy and sec is Salary 
-# vacancy => vacancy::name, ..., vacancy::Salary::salary_from
-def cut_by_100(str):
-    if len(str) > 100:
-        return str[:100] + '...'
-    else:
-        return str
+from datetime import datetime
+
+currency_to_rub = {
+    "Манаты": 35.68,
+    "Белорусские рубли": 23.91,
+    "Евро": 59.90,
+    "Грузинский лари": 21.74,
+    "Киргизский сом": 0.76,
+    "Тенге": 0.13,
+    "Рубли": 1,
+    "Гривны": 1.64,
+    "Доллары": 60.66,
+    "Узбекский сум": 0.0055,
+}
+
+
 class Vacancy:
+    def __init__(self, row):
+        def check_name():
+            global checked_name
+            self.NameIn = True if checked_name.lower() in row['name'].lower() else False
+        check_name()
+        self.avg_salary = ((int(row['salary_from']) + int(row['salary_to']))//2) if row['salary_currency'] == 'Рубли' else (int(row['salary_from'])*(int( currency_to_rub[ row[salary_currency] ] )) + int(row['salary_to']) * (int( currency_to_rub[ row[salary_currency] ] )))//2
     pass
 
 
-class Salary:   
-    pass        
+class Salary:
+    pass
+
+
 class DataSet:
     res = []
     def __init__(self, filename):
@@ -28,28 +42,27 @@ class DataSet:
             for row in reader:
                self.res.append(row)
         
-class Utils:
+
+
+class Statistics:
     @staticmethod
-    def create_table(dataset):
-        table = PrettyTable()
-        table.field_names = ["№"] + [key for key, value in dataset[0].items()]
-        table.align = "l"
-        table.hrules = ALL
-        for field in table.field_names:
-            table.max_width[field] = 20
-        for row in enumerate(dataset, start=1):
-            res = [row[0]]
-            for _, value in row[1].items():
-                res.append(cut_by_100(value))
-            table.add_row(res)
-        print(table)
-            
+    def getyear(datatimestr):
+        return int(datatimestr[-4:])
+    
+    def __init__(self, dataset):
+        for row in dataset:
+            v = Vacancy(row)
+
+
+
+
 def main():
     inp = input()
+    global checked_name
+    checked_name = input()
     DataSet(inp)
     data = getattr(DataSet, 'res')
-    Utils.create_table(data)
-    pass
+    statistics = Statistics(data)
     
 
 
