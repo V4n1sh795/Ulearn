@@ -1,162 +1,209 @@
-import csv
 from datetime import datetime
 
-#изменить в словаре года из строки в числа 
-#отрефокторить сортировку
-correct = {2003: 81875, 2005: 106000, 2006: 86700, 2007: 100367, 2008: 107500, 2009: 54962, 2010: 85000, 2011: 120000, 2012: 22600, 2013: 75225, 2014: 203774, 2015: 55000, 2016: 105504, 2019: 72500, 2020: 88833, 2022: 78547, 2023: 97500, 2024: 100495}
-currency_to_rub = {
-    "Манаты": 35.68,
-    "Белорусские рубли": 23.91,
-    "Евро": 59.90,
-    "Грузинский лари": 21.74,
-    "Киргизский сом": 0.76,
-    "Тенге": 0.13,
-    "Рубли": 1,
-    "Гривны": 1.64,
-    "Доллары": 60.66,
-    "Узбекский сум": 0.0055,
-}
+class Vacancy:
+    def __init__(self, name, description, key_skills, experience_id, premium, employer_name, salary, area_name,
+                 published_at):
+        self.name = name
+        self.description = description
+        self.key_skills = key_skills
+        self.experience_id = experience_id
+        self.premium = premium
+        self.employer_name = employer_name
+        self.salary = salary
+        self.area_name = area_name
+        self.published_at = published_at
+
+
+class Salary:
+    def __init__(self, salary_from, salary_to, salary_gross, salary_currency):
+        self.salary_from = salary_from
+        self.salary_to = salary_to
+        self.salary_gross = salary_gross
+        self.salary_currency = salary_currency
+
 
 class DataSet:
-    res = []
-    def __init__(self, filename):
-        fn = filename
-        if fn:
-            fn = fn
-        else:
-            fn = "test/small_vac_50.csv"
-        with open(fn, 'r', encoding='utf-8-sig') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-               self.res.append(row)
-    
+    def __init__(self, file_name):
+        raw_lines = []
+        with open(file_name, 'r', encoding='utf_8_sig') as f:
+            content = f.read()
+
+        start_pos = 0
+        quote_count = 0
+        n = len(content)
+        for idx in range(n):
+            if content[idx] == '"':
+                quote_count += 1
+            if quote_count % 2 == 0 and content[idx] == '\n':
+                raw_lines.append(content[start_pos:idx])
+                start_pos = idx + 1
+            if idx == n - 1:
+                raw_lines.append(content[start_pos:idx + 1])
+
+        parsed_data = []
+        headers = raw_lines[0].split(',')
+        parsed_data.append(headers)
+        raw_lines = raw_lines[1:]
+
+        for row in raw_lines:
+            fields = []
+            pos = 0
+            quotes = 0
+            row_len = len(row)
+            for j in range(row_len):
+                if row[j] == '"':
+                    quotes += 1
+                if quotes % 2 == 0 and row[j] == ',':
+                    if j == pos:
+                        fields.append('')
+                        pos = j + 1
+                    else:
+                        cell = row[pos:j]
+                        if cell.startswith('"'):
+                            cell = cell[1:]
+                        if cell.endswith('"'):
+                            cell = cell[:-1]
+                        fields.append(cell.replace('""', '"'))
+                        pos = j + 1
+                if j == row_len - 1:
+                    cell = row[pos:j + 1]
+                    if cell.startswith('"'):
+                        cell = cell[1:]
+                    if cell.endswith('"'):
+                        cell = cell[:-1]
+                    fields.append(cell.replace('""', '"'))
+            parsed_data.append(fields)
+
+        self.data = [entry for entry in parsed_data if entry]
+
+
 class Statistics:
     def __init__(self, dataset):
-        
-        self.middle_salary = Utils.create_static_table(dataset)
-        self.vacancy_num = Utils.create_static_table(dataset)
-        self.middle_salary_for = Utils.create_static_table(dataset)
-        self.vacancy_num_for = Utils.create_static_table(dataset)
-        self.middle_salary_in = Utils.create_city_table(dataset)
-        self.vacancy_part_in = Utils.create_city_table(dataset)
-        checker = []
-        for row in dataset:
-            
-            year = Utils.getyear(row)
-            city = Utils.getcity(row)
-            middle_salary = Utils.middle_salary(row)
-            
-            self.vacancy_num[year] += 1
-            self.middle_salary[year] += middle_salary
-            self.vacancy_part_in[city] += 1
-            self.middle_salary_in[city] += middle_salary
-            if year == 2009 or year == 2014 or year == 2016 or year == 2022 or year == 2005:
-                checker.append([year, row['salary_from'], row['salary_to'], row['salary_currency']])
-            if Utils.nameIN(row):
-                self.middle_salary_for[year] += int(middle_salary)
-                self.vacancy_num_for[year] += 1
-        
-        for y, _ in self.middle_salary.items():
-            try:
-                self.middle_salary[y] = round(self.middle_salary[y] / self.vacancy_num[y])
-            except ZeroDivisionError:
-                del self.middle_salary[y]
-        
-        for y, _ in self.middle_salary.items():
-            try:
-                self.middle_salary_for[y] = round(self.middle_salary_for[y] / self.vacancy_num_for[y])
-            except ZeroDivisionError:
-                del self.middle_salary_for[y]
+        self.raw_data = dataset.data
 
-        for c, _ in self.middle_salary_in.items():
-            try:
-                self.middle_salary_in[c] = round(self.middle_salary_in[c] / self.vacancy_part_in[c])
-            except ZeroDivisionError:
-                del self.middle_salary_in[c]
+    def get_salary_stat(self, target_role):
+        exchange_rates = {
+            "Манаты": 35.68,
+            "Белорусские рубли": 23.91,
+            "Евро": 59.90,
+            "Грузинский лари": 21.74,
+            "Киргизский сом": 0.76,
+            "Тенге": 0.13,
+            "Рубли": 1,
+            "Гривны": 1.64,
+            "Доллары": 60.66,
+            "Узбекский сум": 0.0055,
+        }
 
-        for c, _ in self.vacancy_part_in.items():
-            try:
-                self.vacancy_part_in[c] = self.vacancy_part_in[c] / len(dataset)
-            except ZeroDivisionError:
-                del self.vacancy_part_in[c]
+        avg_sal_by_year = {}
+        avg_sal_by_year_job = {}
+        vac_count_by_year = {}
+        avg_sal_by_city = {}
+        share_vac_by_city = {}
+        job_vac_count_by_year = {}
 
-        self.middle_salary = Utils.clear_and_sort_nums(self.middle_salary, False)
-        self.vacancy_num = Utils.clear_and_sort_nums(self.vacancy_num, False)
-        self.middle_salary_for = Utils.clear_and_sort_nums(self.middle_salary_for, False)
-        self.vacancy_num_for = Utils.clear_and_sort_nums(self.vacancy_num_for, False)
-        self.middle_salary_in = Utils.clear_and_sort_nums(self.middle_salary_in, False)
-        self.vacancy_part_in = Utils.clear_and_sort_nums(self.vacancy_part_in, True)
-        for elem in sorted(checker, key = lambda x: x[0]):
-            print(elem)
-        # print('Средняя зарплата по годам:', self.middle_salary)
-        # print('Количество вакансий по годам:', self.vacancy_num)
-        # print("Средняя зарплата по годам для профессии 'разработчик':", self.middle_salary_for)
-        # print("Количество вакансий по годам для профессии 'разработчик':", self.vacancy_num_for)
-        # print('Средняя зарплата по городам:', self.middle_salary_in)
-        # print('Доля вакансий по городам:', self.vacancy_part_in)
-class Utils:
-    @staticmethod
-    def getyear(row):
-        return int(row['published_at'][-4:])
-    @staticmethod
-    def middle_salary(row):
-        s_from = int(row['salary_from'])
-        s_to = int(row['salary_to'])
-        currency = row['salary_currency']
-        
-        if currency != 'Рубли':
-            global currency_to_rub
-            rate = int(currency_to_rub[currency])
-            s_from *= rate
-            s_to *= rate
-    
-        return round((s_from + s_to) / 2)
-    @staticmethod
-    def nameIN(row):
-        global checked_name
-        name = row.get('name', '')
-        if not isinstance(name, str):
-            name = str(name)
-        return checked_name.lower() in name.lower()
-    
-    @staticmethod
-    def create_static_table(dataset):
-        table = {}
-        for row in dataset:
-            table[Utils.getyear(row)] = 0
-        return table
-    
-    @staticmethod
-    def create_city_table(dataset):
-        table = {}
-        for row in dataset:
-            table[Utils.getcity(row)] = 0
-        return table
-    
-    @staticmethod
-    def getcity(row):
-        return row['area_name']
-    
-    @staticmethod 
-    def clear_and_sort_nums(dict1, reverse):
-        res = dict(sorted(dict1.items(), key=lambda item: item[0], reverse=reverse))
-        # return [value for _, value in res.items() if value != 0]\
-        return res
-    @staticmethod 
-    def clear_and_sort_citys(dict1, reverse):
-        res = dict(sorted(dict1.items(), key=lambda item: item[1], reverse=reverse))
-        # return [key: value for key, value in res.items() if value != 0]
-        return res
+        all_entries = self.raw_data
+        header_line = all_entries[0]
+        city_col = header_line.index('area_name')
+        date_col = header_line.index('published_at')
+        sal_from_col = header_line.index('salary_from')
+        sal_to_col = header_line.index('salary_to')
+        currency_col = header_line.index('salary_currency')
+        title_col = header_line.index('name')
+        all_entries = all_entries[1:]
+        total_vacancies = len(all_entries)
+
+        for yr in range(2003, 2025):
+            avg_sal_by_year[yr] = [0, 0]
+            avg_sal_by_year_job[yr] = [0, 0]
+            job_vac_count_by_year[yr] = 0
+
+        for record in all_entries:
+            year_val = int(record[date_col].split('/')[-1])
+            if year_val not in vac_count_by_year:
+                vac_count_by_year[year_val] = 0
+
+            city_name = record[city_col]
+            if city_name not in avg_sal_by_city:
+                avg_sal_by_city[city_name] = [0, 0]
+            if city_name not in share_vac_by_city:
+                share_vac_by_city[city_name] = 0
+
+            mid_salary = ((float(record[sal_from_col]) + float(record[sal_to_col])) / 2.0) * exchange_rates[record[currency_col]]
+
+            avg_sal_by_year[year_val][0] += mid_salary
+            avg_sal_by_year[year_val][1] += 1
+
+            avg_sal_by_city[city_name][0] += mid_salary
+            avg_sal_by_city[city_name][1] += 1
+
+            share_vac_by_city[city_name] += 1
+            vac_count_by_year[year_val] += 1
+
+            if target_role in record[title_col].lower():
+                avg_sal_by_year_job[year_val][0] += mid_salary
+                avg_sal_by_year_job[year_val][1] += 1
+                job_vac_count_by_year[year_val] += 1
+
+        to_remove_avg_year = []
+        to_remove_avg_job = []
+        to_remove_city_avg = []
+        to_remove_job_count = []
+
+        for yr_key in avg_sal_by_year:
+            if avg_sal_by_year[yr_key][1] > 0:
+                avg_sal_by_year[yr_key] = round(avg_sal_by_year[yr_key][0] / avg_sal_by_year[yr_key][1])
+            else:
+                to_remove_avg_year.append(yr_key)
+
+        for yr_key in avg_sal_by_year_job:
+            if avg_sal_by_year_job[yr_key][1] > 0:
+                avg_sal_by_year_job[yr_key] = round(avg_sal_by_year_job[yr_key][0] / avg_sal_by_year_job[yr_key][1])
+            else:
+                to_remove_avg_job.append(yr_key)
+
+        for city in avg_sal_by_city:
+            if avg_sal_by_city[city][1] > 0:
+                avg_sal_by_city[city] = round(avg_sal_by_city[city][0] / avg_sal_by_city[city][1])
+            else:
+                to_remove_city_avg.append(city)
+            share_vac_by_city[city] = round(share_vac_by_city[city] / total_vacancies, 4)
+
+        for yr_key in job_vac_count_by_year:
+            if job_vac_count_by_year[yr_key] == 0:
+                to_remove_job_count.append(yr_key)
+
+        for k in to_remove_city_avg:
+            del avg_sal_by_city[k]
+        for k in to_remove_avg_job:
+            del avg_sal_by_year_job[k]
+        for k in to_remove_avg_year:
+            del avg_sal_by_year[k]
+        for k in to_remove_job_count:
+            del job_vac_count_by_year[k]
+
+        avg_sal_by_year = dict(sorted(avg_sal_by_year.items()))
+        vac_count_by_year = dict(sorted(vac_count_by_year.items()))
+        avg_sal_by_year_job = dict(sorted(avg_sal_by_year_job.items()))
+        job_vac_count_by_year = dict(sorted(job_vac_count_by_year.items()))
+        avg_sal_by_city = dict(sorted(avg_sal_by_city.items(), key=lambda x: x[1], reverse=True)[:10])
+        share_vac_by_city = dict(sorted(share_vac_by_city.items(), key=lambda x: x[1], reverse=True)[:10])
+
+        print(f"Средняя зарплата по годам: {avg_sal_by_year}")
+        print(f"Количество вакансий по годам: {vac_count_by_year}")
+        print(f"Средняя зарплата по годам для профессии '{target_role}': {avg_sal_by_year_job}")
+        print(f"Количество вакансий по годам для профессии '{target_role}': {job_vac_count_by_year}")
+        print(f"Средняя зарплата по городам: {avg_sal_by_city}")
+        print(f"Доля вакансий по городам: {share_vac_by_city}")
+
+
 def main():
-    inp = input()
-    global checked_name
-    checked_name = input()
-    DataSet(inp)
-    data = getattr(DataSet, 'res')
-    Statistics(data)
-    
+    inp_file = input()
+    job_title = input()
+    dataset_obj = DataSet(inp_file)
+    stats_processor = Statistics(dataset_obj)
+    stats_processor.get_salary_stat(job_title)
 
 
 if __name__ == '__main__':
     main()
-
