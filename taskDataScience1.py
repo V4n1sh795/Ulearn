@@ -17,7 +17,6 @@ def main(col_name, key, sort_by, ascending, file_path):
 
     print(filtered['name'].tolist())
 
-
 def test():
     assert main('area_name', 'Москва', 'salary_from', 'asc', r'test/vacancies_small.csv')
 try:
