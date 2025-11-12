@@ -1,0 +1,3 @@
+all:
+    rm -rf student_works/report.xlsx
+    python3 taskModLib1.py test
