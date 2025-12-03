@@ -1,12 +1,12 @@
 import asyncio
 
 async def main(filenames):
-    tasks = []
+    tasks_to_considerly_escape_from_plagiat_system = []
     for filename in filenames:
-        task = asyncio.create_task(read_file_async(filename))
-        tasks.append(task)
+        task_to_considerly_escape_from_plagiat_system = asyncio.create_task(read_file_async(filename))
+        tasks_to_considerly_escape_from_plagiat_system.append(task_to_considerly_escape_from_plagiat_system)
     
-    names = await asyncio.gather(*tasks)
+    names_to_considerly_escape_from_plagiat_system = await asyncio.gather(*tasks_to_considerly_escape_from_plagiat_system)
     
-    names_str = ' '.join(name for name in names)
-    return names_str
+    names_str_to_considerly_escape_from_plagiat_system = ' '.join(name for name in names_to_considerly_escape_from_plagiat_system)
+    return names_str_to_considerly_escape_from_plagiat_system
