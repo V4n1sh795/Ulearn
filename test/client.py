@@ -1,31 +1,27 @@
-import socket
-import json
+import xmlrpc.client
 
 
-def send_request(data):
-    host = "127.0.0.32"
-    port = 12345
+client = xmlrpc.client.ServerProxy('http://localhost:8000')
+while True:
+    command = input()
 
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, port))
+    if command == 'exit':
+        method = getattr(client, command)
+        method()
+        break
 
-    data_string = json.dumps(data)
-    client_socket.sendall(data_string.encode())
+    command = command.split()
+    method_name = command[0]
+    method_value = command[1]
 
-    response = client_socket.recv(1024).decode()
-    client_socket.close()
+    method = getattr(client, command[0])
 
-    return response
-
-
-data = {
-    "command": "get_data",
-    "operation": "get_website",
-    "name": "Bauer-Weiss"
-}
-
-response_str = send_request(data)
-response_data = json.loads(response_str)
-result = response_data.get("result")
-
-print(result)
+    if method_name == 'get_vacancy_by_id':
+        result = method(int(method_value))
+        print(result)
+    elif method_name == 'get_vacancies_by_city':
+        result = method(str(method_value))
+        print(result)
+    elif method_name == 'get_vacancies_by_min_salary':
+        result = method(int(method_value))
+        print(result)

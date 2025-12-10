@@ -5,8 +5,8 @@ import json
 
 def method(inp):
     request_data = json.loads(inp)
-    operation = request_data["operation"]
-    name = request_data["name"]
+    operation = request_data.get("operation")
+    name = request_data.get("name")
     df = pd.read_csv('test/organizations.csv')
     org_str = df[df['Name'].str.contains(name, na=False)]
     
@@ -29,16 +29,22 @@ def start_server():
     host = "127.0.0.32"
     port = 12345
     # serv conf
-    server = socket.socket()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
-    server.listen(5)
+    server.listen(1)
     client, _ = server.accept()
-    
-    inp = client.recv(1024).decode()
-    result = {"result": method(inp)}
+    while True:
+        inp = client.recv(1024).decode()
+        if not inp:
+            break
+        print(inp)
+        result = {"result": method(inp)}
+        print(result)
+        response_json = json.dumps(result)
 
-    response_json = json.dumps(result)
-    client.send(response_json.encode())
+        client.sendall(response_json.encode())
+
+    server.close()
 if __name__ == '__main__':
     try:
         if sys.argv[1] == 'test':
